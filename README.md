@@ -18,7 +18,6 @@ The goal is to demonstrate high-performance engineering in C++, handling concurr
 *   **Networking:**
     *   **Boost.Beast:** High-performance asynchronous WebSocket & HTTP server.
     *   **Boost.Asio:** Non-blocking I/O model.
-*   **Tooling:** CMake, Vcpkg, Clang-Tidy, Google Test.
 
 ### Frontend (Client)
 *   **Framework:** React + Vite (Fast HMR and bundling).

@@ -1,0 +1,23 @@
+{
+    // --- Desativa o IntelliSense padrão da Microsoft (para não brigar com o clangd) ---
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.formatting": "disabled",
+    "C_Cpp.errorSquiggles": "disabled",
+
+    // --- Configura o Clangd (O motor inteligente) ---
+    "clangd.path": "clangd",
+    "clangd.arguments": [
+        // Diz onde achar o mapa do projeto (compile_commands.json)
+        "--compile-commands-dir=${workspaceFolder}/build",
+        "--background-index",
+        "--clang-tidy",             // Ativa o linter usando seu .clang-tidy
+        "--completion-style=detailed",
+        "--header-insertion=iwyu"   // Adiciona includes automaticamente
+    ],
+
+    // --- Configura Formatação ao Salvar ---
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+    }
+}
