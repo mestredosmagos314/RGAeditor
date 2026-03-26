@@ -1,4 +1,4 @@
-# Converge
+# RGA Editor
 
 > **Low latency real-time collaborative text editor backend in C++23 using CRDTs (RGA) and WebSockets.**
 
