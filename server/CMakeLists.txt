@@ -23,6 +23,7 @@ include_directories(include)
 #Executable
 add_executable(RGAeditorServer 
     src/main.cpp
+    src/RGA.cpp
 )
 
 #Compilation flags
