@@ -1,62 +1,57 @@
+#include <exception>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
+#include "Operation.hpp"
 #include "RGA.hpp"
-#include "RGAStructs.hpp"
 
-using namespace rgaeditor;
+using json = nlohmann::json;
 
 auto main() -> int {
-  std::cout << "--- Testing RGA CRDT (with insertions and deletions) ---\n\n";
+  try {
+    std::cout << "--- RGA Editor & JSON Test ---\n\n";
 
-  RGA client1(1);
-  RGA client2(2);
-  CrdtId head_id = {0, 0};
+    // 1. Setup two clients
+    rgaeditor::RGA alice(1);
+    rgaeditor::RGA bob(2);
 
-  std::cout << "[1] Client 1 types 'CASA'\n";
-  auto num1 = client1.insertLocal('C', head_id);
-  auto num2 = client1.insertLocal('A', num1->id);
-  auto num3 = client1.insertLocal('S', num2->id);
-  auto num4 = client1.insertLocal('A', num3->id);
+    // 2. Alice types 'A' at the initial position
+    rgaeditor::CrdtId head_id = {0, 0};
+    auto node_a = alice.insertLocal('A', head_id);
 
-  std::cout << "Text C1: " << client1.toString() << "\n\n";
+    // 3. Alice creates the operation payload
+    rgaeditor::Operation op_alice_insert = {rgaeditor::OpType::Insert, node_a->value, node_a->id, node_a->origin_left};
 
-  std::cout << "[2] Synchronizing edits to Client 2...\n";
-  client2.insertRemote('C', num1->id, head_id);
-  client2.insertRemote('A', num2->id, num1->id);
-  client2.insertRemote('S', num3->id, num2->id);
-  client2.insertRemote('A', num4->id, num3->id);
+    // 4. Convert C++ object to String (to send over the network)
+    json json_payload = op_alice_insert;
+    std::string json_string = json_payload.dump(4);
 
-  std::cout << "Text C2: " << client2.toString() << "\n\n";
+    std::cout << "[NETWORK] Alice sent the following JSON:\n";
+    std::cout << json_string << "\n\n";
 
-  std::cout << "[3] --- SIMULATING NETWORK DROP ---\n";
-  std::cout << "Client 1 deletes 'S' (from CASA)\n";
-  client1.deleteLocal(num3->id);
+    // (The JSON travels through the internet to Bob's computer)
 
-  std::cout << "Client 2, concurrently, inserts an 'H' right after 'S'\n";
-  auto n5_c2 = client2.insertLocal('H', num3->id);
+    json json_received = json::parse(json_string);
+    auto op_received = json_received.get<rgaeditor::Operation>();
 
-  std::cout << "Text C1 during disconnection: " << client1.toString() << " (C1 deleted)\n";
-  std::cout << "Text C2 during disconnection: " << client2.toString() << " (C2 inserted)\n\n";
+    if (op_received.type == rgaeditor::OpType::Insert) {
+      bob.insertRemote(op_received.value, op_received.id, op_received.origin_left);
+    }
 
-  std::cout << "[4] --- NETWORK RESTORED ---\n";
-  std::cout << "Integrating edits...\n";
+    std::cout << "Alice's text: " << alice.toString() << "\n";
+    std::cout << "Bob's text:   " << bob.toString() << "\n";
 
-  client1.insertRemote('H', n5_c2->id, num3->id);
+    if (alice.toString() == bob.toString()) {
+      std::cout << "\nSUCCESS! The CRDT and JSON serialization are working in harmony.\n";
+    }
 
-  client2.deleteRemote(num3->id);
+    return 0;
 
-  std::string text_c1 = client1.toString();
-  std::string text_c2 = client2.toString();
-
-  std::cout << "Final Text C1: " << text_c1 << "\n";
-  std::cout << "Final Text C2: " << text_c2 << "\n\n";
-
-  if (text_c1 == text_c2) {
-    std::cout << "SUCCESS! Text converged to: " << text_c1 << "\n";
-    std::cout << "Notice that the 'S' disappeared, but served as an anchor (Tombstone) for the 'H'.\n";
-  } else {
-    std::cout << "FAILURE! States diverge.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "Fatal server error: " << e.what() << '\n';
+    return 1;
+  } catch (...) {
+    std::cerr << "Unknown fatal error.\n";
+    return 1;
   }
-
-  return 0;
 }
