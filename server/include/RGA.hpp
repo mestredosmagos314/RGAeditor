@@ -17,7 +17,6 @@ private:
   std::map<CrdtId, std::shared_ptr<Node>> lookup_;
 
 public:
-  // Construtores não possuem tipo de retorno (nem auto)
   explicit RGA(uint32_t client_id);
 
   auto insertLocal(char value, CrdtId origin_left) -> std::shared_ptr<Node>;

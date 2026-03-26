@@ -59,7 +59,7 @@ auto RGA::toString() const -> std::string {
 auto RGA::integrate(const std::shared_ptr<Node>& new_node) -> void {
   auto iterator = lookup_.find(new_node->origin_left);
   if (iterator == lookup_.end()) {
-    throw std::runtime_error("Erro de Causalidade: origin_left nao encontrado.");
+    throw std::runtime_error("Causality error: origin_left was not found.");
   }
 
   auto prev = iterator->second;
