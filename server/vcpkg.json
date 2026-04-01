@@ -1,7 +1,8 @@
 {
   "name": "rgaeditor",
   "version": "0.1.0",
-  "dependencies": [
-    "nlohmann-json"
+  "dependencies":[
+    "nlohmann-json",
+    "gtest"
   ]
 }

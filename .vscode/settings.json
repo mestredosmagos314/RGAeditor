@@ -8,7 +8,7 @@
     "clangd.path": "clangd",
     "clangd.arguments": [
         // Diz onde achar o mapa do projeto (compile_commands.json)
-        "--compile-commands-dir=${workspaceFolder}/build",
+        "--compile-commands-dir=${workspaceFolder}/build_debug",
         "--background-index",
         "--clang-tidy",             // Ativa o linter usando seu .clang-tidy
         "--completion-style=detailed",
