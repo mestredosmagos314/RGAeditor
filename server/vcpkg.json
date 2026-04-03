@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "dependencies":[
     "nlohmann-json",
-    "gtest"
+    "gtest",
+    "boost-asio",
+    "boost-beast"
   ]
 }

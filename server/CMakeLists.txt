@@ -12,14 +12,19 @@ endif()
 
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED) 
+find_package(Boost REQUIRED) 
 
 include_directories(include)
 
 add_executable(RGAeditorServer 
     src/main.cpp
     src/RGA.cpp
+    src/Room.cpp
+    src/Session.cpp
+    src/Listener.cpp  
 )
-target_link_libraries(RGAeditorServer PRIVATE nlohmann_json::nlohmann_json)
+
+target_link_libraries(RGAeditorServer PRIVATE nlohmann_json::nlohmann_json Boost::headers)
 
 enable_testing()
 

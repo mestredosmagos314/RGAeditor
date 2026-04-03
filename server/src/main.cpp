@@ -1,57 +1,35 @@
-#include <exception>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include <memory>
 
-#include "Operation.hpp"
-#include "RGA.hpp"
-
-using json = nlohmann::json;
+#include "Listener.hpp"
+#include "Room.hpp"
 
 auto main() -> int {
   try {
-    std::cout << "--- RGA Editor & JSON Test ---\n\n";
+    const auto address = boost::asio::ip::make_address("0.0.0.0");
+    constexpr uint16_t port = 8080;
 
-    // 1. Setup two clients
-    rgaeditor::RGA alice(1);
-    rgaeditor::RGA bob(2);
+    boost::asio::io_context io_context{1};
 
-    // 2. Alice types 'A' at the initial position
-    rgaeditor::CrdtId head_id = {0, 0};
-    auto node_a = alice.insertLocal('A', head_id);
+    const auto room = std::make_shared<rgaeditor::Room>();
 
-    // 3. Alice creates the operation payload
-    rgaeditor::Operation op_alice_insert = {rgaeditor::OpType::Insert, node_a->value, node_a->id, node_a->origin_left};
+    std::make_shared<rgaeditor::Listener>(io_context, boost::asio::ip::tcp::endpoint{address, port}, room)->run();
 
-    // 4. Convert C++ object to String (to send over the network)
-    json json_payload = op_alice_insert;
-    std::string json_string = json_payload.dump(4);
+    boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
+    signals.async_wait([&](const boost::system::error_code& /*error*/, int /*signal_number*/) { io_context.stop(); });
 
-    std::cout << "[NETWORK] Alice sent the following JSON:\n";
-    std::cout << json_string << "\n\n";
+    std::cout << "--- RGA Editor Backend C++ ---\n";
+    std::cout << "Websocker server running at port " << port << "...\n";
 
-    // (The JSON travels through the internet to Bob's computer)
-
-    json json_received = json::parse(json_string);
-    auto op_received = json_received.get<rgaeditor::Operation>();
-
-    if (op_received.type == rgaeditor::OpType::Insert) {
-      bob.insertRemote(op_received.value, op_received.id, op_received.origin_left);
-    }
-
-    std::cout << "Alice's text: " << alice.toString() << "\n";
-    std::cout << "Bob's text:   " << bob.toString() << "\n";
-
-    if (alice.toString() == bob.toString()) {
-      std::cout << "\nSUCCESS! The CRDT and JSON serialization are working in harmony.\n";
-    }
+    io_context.run();
 
     return 0;
 
-  } catch (const std::exception& e) {
-    std::cerr << "Fatal server error: " << e.what() << '\n';
-    return 1;
-  } catch (...) {
-    std::cerr << "Unknown fatal error.\n";
+  } catch (const std::exception& exception) {
+    std::cerr << "Fatal error: " << exception.what() << '\n';
     return 1;
   }
 }

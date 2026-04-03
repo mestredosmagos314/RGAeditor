@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste RGA WebSocket</title>
+    <style> body { font-family: sans-serif; padding: 20px; background: #1e1e1e; color: white;} </style>
+</head>
+<body>
+    <h2>RGA Test Client</h2>
+    <button onclick="enviarLetra('A')">Digitar 'A'</button>
+    <button onclick="enviarLetra('B')">Digitar 'B'</button>
+    
+    <h3>Eventos Recebidos:</h3>
+    <ul id="log"></ul>
+
+<script>
+        const log = document.getElementById('log');
+        const ws = new WebSocket('ws://localhost:8080');
+
+        const meuClientId = Math.floor(Math.random() * 10000);
+        let clock = 0;
+
+        let lastId = { clock: 0, client_id: 0 };
+
+        ws.onopen = () => {
+            log.innerHTML += `<li>✅ Conectado! Meu Client ID é: ${meuClientId}</li>`;
+        };
+        ws.onclose = () => log.innerHTML += "<li>❌ Desconectado.</li>";
+        
+        ws.onmessage = (event) => {
+            log.innerHTML += "<li>📩 Recebeu fofoca: " + event.data + "</li>";
+        };
+
+        function enviarLetra(letra) {
+            clock++;
+            
+            const meuNovoId = { clock: clock, client_id: meuClientId };
+
+            const operation = {
+                type: "insert",
+                value: letra,
+                id: meuNovoId,
+                origin_left: lastId 
+            };
+            
+            lastId = meuNovoId;
+
+            const jsonString = JSON.stringify(operation);
+            ws.send(jsonString);
+            log.innerHTML += "<li>📤 Enviei: " + jsonString + "</li>";
+        }
+    </script>
+</body>
+</html>
